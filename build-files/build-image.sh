@@ -18,30 +18,29 @@ update_fresh_container() {
 
 setup_dotnet_sdk() {
     MIRROR="https://mirror.lchs.network/pub/almalinux/9.3/AppStream/${ARCH}/os/Packages"
-    case "${SDK}" in 
-        7)
-            PKGS="dotnet-apphost-pack-7.0-7.0.15-1.el9_3 dotnet-host-8.0.1-1.el9_3"
-            PKGS="${PKGS} dotnet-hostfxr-7.0-7.0.15-1.el9_3 dotnet-targeting-pack-7.0-7.0.15-1.el9_3"
-            PKGS="${PKGS} dotnet-templates-7.0-7.0.115-1.el9_3 dotnet-runtime-7.0-7.0.15-1.el9_3"
-            PKGS="${PKGS} dotnet-sdk-7.0-7.0.115-1.el9_3 aspnetcore-runtime-7.0-7.0.15-1.el9_3"
-            PKGS="${PKGS} aspnetcore-targeting-pack-7.0-7.0.15-1.el9_3 netstandard-targeting-pack-2.1-8.0.101-1.el9_3"
-            ;;
-        6)
-            PKGS="dotnet-host-8.0.1-1.el9_3 dotnet-apphost-pack-6.0-6.0.26-1.el9_3"
-            PKGS="${PKGS} dotnet-hostfxr-6.0-6.0.26-1.el9_3 dotnet-targeting-pack-6.0-6.0.26-1.el9_3"
-            PKGS="${PKGS} dotnet-templates-6.0-6.0.126-1.el9_3 dotnet-runtime-6.0-6.0.26-1.el9_3"
-            PKGS="${PKGS} dotnet-sdk-6.0-6.0.126-1.el9_3 aspnetcore-runtime-6.0-6.0.26-1.el9_3"
-            PKGS="${PKGS} aspnetcore-targeting-pack-6.0-6.0.26-1.el9_3 netstandard-targeting-pack-2.1-8.0.101-1.el9_3"
-            ;;
-        *)
-            echo "Unsupported architecture ${ARCH}" >&2
-            return 1
-            ;;
+    case "${SDK}" in
+    7)
+        PKGS="dotnet-apphost-pack-7.0-7.0.15-1.el9_3 dotnet-host-8.0.1-1.el9_3"
+        PKGS="${PKGS} dotnet-hostfxr-7.0-7.0.15-1.el9_3 dotnet-targeting-pack-7.0-7.0.15-1.el9_3"
+        PKGS="${PKGS} dotnet-templates-7.0-7.0.115-1.el9_3 dotnet-runtime-7.0-7.0.15-1.el9_3"
+        PKGS="${PKGS} dotnet-sdk-7.0-7.0.115-1.el9_3 aspnetcore-runtime-7.0-7.0.15-1.el9_3"
+        PKGS="${PKGS} aspnetcore-targeting-pack-7.0-7.0.15-1.el9_3 netstandard-targeting-pack-2.1-8.0.101-1.el9_3"
+        ;;
+    6)
+        PKGS="dotnet-host-8.0.1-1.el9_3 dotnet-apphost-pack-6.0-6.0.26-1.el9_3"
+        PKGS="${PKGS} dotnet-hostfxr-6.0-6.0.26-1.el9_3 dotnet-targeting-pack-6.0-6.0.26-1.el9_3"
+        PKGS="${PKGS} dotnet-templates-6.0-6.0.126-1.el9_3 dotnet-runtime-6.0-6.0.26-1.el9_3"
+        PKGS="${PKGS} dotnet-sdk-6.0-6.0.126-1.el9_3 aspnetcore-runtime-6.0-6.0.26-1.el9_3"
+        PKGS="${PKGS} aspnetcore-targeting-pack-6.0-6.0.26-1.el9_3 netstandard-targeting-pack-2.1-8.0.101-1.el9_3"
+        ;;
+    *)
+        echo "Unsupported architecture ${ARCH}" >&2
+        return 1
+        ;;
     esac
     echo "Retrieving dotnet packages"
     pushd /tmp >/dev/null
-    for pkg in ${PKGS}
-    do
+    for pkg in ${PKGS}; do
         RPM="${pkg}.${ARCH}.rpm"
         wget -q ${MIRROR}/${RPM}
         echo -n "Converting ${RPM}... "
@@ -69,7 +68,7 @@ setup_dotnet_sdk() {
         popd >/dev/null
     fi
 
-    echo "Using SDK - `dotnet --version`"
+    echo "Using SDK - $(dotnet --version)"
 
     # fix ownership
     sudo chown ubuntu:ubuntu /home/ubuntu/.bashrc
@@ -86,6 +85,10 @@ patch_runner() {
     git clone -q ${RUNNERREPO}
     cd runner
     git checkout $(git describe --tags $(git rev-list --tags --max-count=1)) -b ${ARCH}
+    # Find the current dotnet version
+    current_dotnet_version=$(dotnet --version)
+    # Replace the version in global.json using sed
+    sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$current_dotnet_version\"/" src/global.json
     git apply /home/ubuntu/runner-${ARCH}.patch
     return $?
 }
@@ -99,7 +102,7 @@ build_runner() {
 
     if [ $? -eq 0 ]; then
         echo "dev package"
-        ./dev.sh package 
+        ./dev.sh package
 
         if [ $? -eq 0 ]; then
             echo "Finished building runner binary"
@@ -114,7 +117,7 @@ build_runner() {
 
 install_runner() {
     echo "Installing runner"
-    sudo mkdir -p /opt/runner 
+    sudo mkdir -p /opt/runner
     sudo tar -xf /tmp/runner/_package/*.tar.gz -C /opt/runner
     if [ $? -eq 0 ]; then
         sudo chown ubuntu:ubuntu -R /opt/runner
@@ -126,7 +129,7 @@ install_runner() {
 
 cleanup() {
     rm -rf /home/ubuntu/build-image.sh /home/ubuntu/runner-${ARCH}.patch \
-           /tmp/runner /tmp/preseed-yaml
+        /tmp/runner /tmp/preseed-yaml
 }
 
 run() {
@@ -150,33 +153,32 @@ run() {
 }
 
 export HOME=/home/ubuntu
-ARCH=`uname -m`
+ARCH=$(uname -m)
 SDK=""
 RUNNERREPO="https://github.com/actions/runner"
-while getopts "a:s:" opt
-do
+while getopts "a:s:" opt; do
     case ${opt} in
-        a)
-            RUNNERREPO=${OPTARG}
-            ;;
-        s)
-            SDK=${OPTARG}
-            ;;
-        *)
-            exit 4
-            ;;
+    a)
+        RUNNERREPO=${OPTARG}
+        ;;
+    s)
+        SDK=${OPTARG}
+        ;;
+    *)
+        exit 4
+        ;;
     esac
 done
-shift $(( OPTIND - 1 ))
+shift $((OPTIND - 1))
 
 if [ -z "${SDK}" ]; then
     case ${ARCH} in
-        ppc64le)
-            SDK=7
-            ;;
-        s390x)
-            SDK=6
-            ;;
+    ppc64le)
+        SDK=7
+        ;;
+    s390x)
+        SDK=6
+        ;;
     esac
 fi
 
