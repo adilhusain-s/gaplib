@@ -20,3 +20,5 @@ INSTALLER_SCRIPT_FOLDER="${installer_script_folder}"
 DOCKERHUB_PULL_IMAGES="NO"
 
 PATCH_FILE="${PATCH_FILE:-runner-sdk8-${ARCH}.patch}"
+# PowerShell patch file (add support for arch-specific patch)
+POWERSHELL_PATCH_FILE="${POWERSHELL_PATCH_FILE:-powershell-${ARCH}.patch}"
