@@ -15,7 +15,7 @@ sudo cp -r ${IMGDIR}/scripts/helpers/. "${helper_script_folder}"
 sudo cp -r ${CURRENT_DIR}/. "${helper_script_folder}"
 sudo cp -r ${CURRENT_DIR}/../assets/. "${installer_script_folder}"
 sudo cp ${CURRENT_DIR}/../../patches/${PATCH_FILE} "${image_folder}/runner-sdk-8.patch"
-# Copy PowerShell patch if it exists
+# Copy PowerShell patch if it exists (version-aware, not using Docker naming convention)
 if [ -f "${CURRENT_DIR}/../../patches/${POWERSHELL_PATCH_FILE}" ]; then
   sudo cp "${CURRENT_DIR}/../../patches/${POWERSHELL_PATCH_FILE}" "${image_folder}/powershell.patch"
 fi
