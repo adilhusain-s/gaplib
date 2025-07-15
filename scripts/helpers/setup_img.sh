@@ -15,6 +15,10 @@ sudo cp -r ${IMGDIR}/scripts/helpers/. "${helper_script_folder}"
 sudo cp -r ${CURRENT_DIR}/. "${helper_script_folder}"
 sudo cp -r ${CURRENT_DIR}/../assets/. "${installer_script_folder}"
 sudo cp ${CURRENT_DIR}/../../patches/${PATCH_FILE} "${image_folder}/runner-sdk-8.patch"
+# Copy PowerShell patch if it exists
+if [ -f "${CURRENT_DIR}/../../patches/${POWERSHELL_PATCH_FILE}" ]; then
+  sudo cp "${CURRENT_DIR}/../../patches/${POWERSHELL_PATCH_FILE}" "${image_folder}/powershell.patch"
+fi
 sudo cp ${IMGDIR}/toolsets/${toolset_file_name} "${installer_script_folder}/toolset.json"
 sudo cp -r ${IMGDIR}/scripts/build/. "${installer_script_folder}"
 sudo cp -r ${IMGDIR}/assets/post-gen "${image_folder}"
