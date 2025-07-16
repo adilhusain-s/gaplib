@@ -38,12 +38,8 @@ CURRENT_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 IMGDIR="${CURRENT_DIR}/../../images/${IMAGE_OS}"
 
 
-echo "[DEBUG] Creating patch directory: ${helper_script_folder}/patch"
-sudo mkdir -p "${helper_script_folder}/patch"
-echo "[DEBUG] Directory created: ${helper_script_folder}/patch (exit code $?)"
-
-# Check if /imagegeneration already exists, delete if so, and recreate
-
+echo "[DEBUG] Checking if image_folder exists: ${image_folder}"
+echo "[DEBUG] Creating installer_script_folder: ${installer_script_folder}"
 echo "[DEBUG] Checking if image_folder exists: ${image_folder}"
 if [ -d "${image_folder}" ]; then
     echo "Directory ${image_folder} exists. Deleting and recreating it."
@@ -51,6 +47,10 @@ if [ -d "${image_folder}" ]; then
     echo "[DEBUG] Deleted existing image_folder: ${image_folder} (exit code $?)"
 fi
 
+# Now create all needed directories after deletion
+echo "[DEBUG] Creating patch directory: ${helper_script_folder}/patch"
+sudo mkdir -p "${helper_script_folder}/patch"
+echo "[DEBUG] Directory created: ${helper_script_folder}/patch (exit code $?)"
 echo "[DEBUG] Creating installer_script_folder: ${installer_script_folder}"
 sudo mkdir -p "${installer_script_folder}"
 echo "[DEBUG] Copying IMGDIR/scripts/helpers to helper_script_folder"
