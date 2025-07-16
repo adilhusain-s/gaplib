@@ -1,19 +1,3 @@
-## Ensure freshly built pwsh is available in PATH for build steps before .deb install
-PWSH_BIN=$(find "$(pwd)/bin/Release" -type f -path "*/linux-*/publish/pwsh" | head -n1)
-if [ -z "$PWSH_BIN" ] || [ ! -x "$PWSH_BIN" ]; then
-  echo "[ERROR] Built pwsh binary not found or not executable at expected location!" >&2
-  find "$(pwd)/bin/Release" -type f -name pwsh
-  exit 1
-fi
-echo "[DEBUG] Linking freshly built $PWSH_BIN to /usr/bin/pwsh for immediate use"
-sudo ln -sf "$PWSH_BIN" /usr/bin/pwsh
-ls -l /usr/bin/pwsh
-
-if ! command -v pwsh >/dev/null 2>&1; then
-  echo "[ERROR] pwsh not found in PATH after symlink. Check build output and symlink step." >&2
-  ls -l /usr/bin/pwsh || true
-  exit 1
-fi
 #!/usr/bin/env bash
 set -euo pipefail
 
