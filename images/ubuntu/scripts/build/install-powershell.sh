@@ -13,6 +13,26 @@ PATCH_DIR="${SRC_DIR}/patch"
 DOTNET_DIR="/usr/share/dotnet"
 INSTALLED_BY_SCRIPT=()
 
+# Debug: Print working and patch directories
+echo "[DEBUG] Current working directory: $(pwd)"
+echo "[DEBUG] SRC_DIR: $SRC_DIR"
+echo "[DEBUG] PATCH_DIR: $PATCH_DIR"
+if [ -d "$PATCH_DIR" ]; then
+  echo "[DEBUG] Listing contents of $PATCH_DIR:"
+  ls -l "$PATCH_DIR"
+else
+  echo "[ERROR] PATCH_DIR does not exist: $PATCH_DIR" >&2
+fi
+
+# Debug: Check for required patch files
+for required in "powershell-native-${POWERSHELL_NATIVE_VERSION}.patch" "powershell-${TARGETARCH}-${POWERSHELL_VERSION}.patch" "powershell-gen-${POWERSHELL_VERSION}.tar.gz"; do
+  if [ ! -f "$PATCH_DIR/$required" ]; then
+    echo "[ERROR] Required file missing: $PATCH_DIR/$required" >&2
+  else
+    echo "[DEBUG] Found required file: $PATCH_DIR/$required"
+  fi
+done
+
 # ---------------------------
 # UTILS
 # ---------------------------
