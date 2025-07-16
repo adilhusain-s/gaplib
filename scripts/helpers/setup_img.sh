@@ -1,3 +1,27 @@
+echo "[DEBUG] Listing contents of ${helper_script_folder}/patch after copy:"
+sudo ls -l "${helper_script_folder}/patch"
+
+# Copy dotnet-install.py and update-dotnet-sdk-and-tfm.sh from helpers to patch dir for PowerShell build
+if [ -f "${CURRENT_DIR}/dotnet-install.py" ]; then
+  sudo cp "${CURRENT_DIR}/dotnet-install.py" "${helper_script_folder}/patch/"
+fi
+if [ -f "${CURRENT_DIR}/update-dotnet-sdk-and-tfm.sh" ]; then
+  sudo cp "${CURRENT_DIR}/update-dotnet-sdk-and-tfm.sh" "${helper_script_folder}/patch/"
+fi
+
+# Debug: List all files in patch dir after copying
+echo "[DEBUG] Final contents of ${helper_script_folder}/patch:"
+sudo ls -l "${helper_script_folder}/patch"
+
+# Debug: Check for specific required patch files
+for required in powershell-native-*.patch powershell-*-*.patch powershell-gen-*.tar.gz; do
+  found=$(ls "${helper_script_folder}/patch"/$required 2>/dev/null | wc -l)
+  if [ "$found" -eq 0 ]; then
+    echo "[ERROR] Required file pattern missing: $required in ${helper_script_folder}/patch" >&2
+  else
+    echo "[DEBUG] Found $found file(s) for pattern: $required"
+  fi
+done
 #!/bin/bash
 set -e  # Exit on any error
 
