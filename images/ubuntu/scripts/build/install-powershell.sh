@@ -94,23 +94,23 @@ sudo cp "$LIBPSL_PATH" /usr/lib/
 # BUILD POWERSHELL
 # ---------------------------
 cd /tmp
-cp "$HELPER_DIR/dotnet-install.py" .
-cp "$HELPER_DIR/update-dotnet-sdk-and-tfm.sh" .
-chmod +x update-dotnet-sdk-and-tfm.sh
 cp "$PATCH_DIR/powershell-${TARGETARCH}-${POWERSHELL_VERSION}.patch" pwsh.patch
 cp "$PATCH_DIR/powershell-gen-${POWERSHELL_VERSION}.tar.gz" .
 
 log_and_run git clone https://github.com/PowerShell/PowerShell.git PowerShellSrc
 cd PowerShellSrc
 git checkout "tags/$POWERSHELL_VERSION" -b "${TARGETARCH}-${POWERSHELL_VERSION}"
+# Copy helpers directly from build context
+cp "$HELPER_DIR/dotnet-install.py" .
+cp "$HELPER_DIR/update-dotnet-sdk-and-tfm.sh" .
+chmod +x update-dotnet-sdk-and-tfm.sh
 
 # Use SDK version from global.json, install to /usr/share/dotnet, symlink to /usr/bin/dotnet
 SDK_VERSION=$(python3 -c "import json; print(json.load(open('global.json'))['sdk']['version'])")
-python3 ../dotnet-install.py --tag $SDK_VERSION --install-dir "$DOTNET_DIR"
+python3 ./dotnet-install.py --tag $SDK_VERSION --install-dir "$DOTNET_DIR"
 sudo ln -sf "$DOTNET_DIR/dotnet" /usr/bin/dotnet
 
 git apply ../pwsh.patch
-cp ../update-dotnet-sdk-and-tfm.sh .
 ./update-dotnet-sdk-and-tfm.sh -g
 tar -xzf ../powershell-gen-${POWERSHELL_VERSION}.tar.gz -C .
 
