@@ -81,7 +81,14 @@ cd src/libpsl-native
 cmake -DCMAKE_BUILD_TYPE=Debug .
 make
 (make test || cat Testing/Temporary/LastTest.log || true)
-sudo cp libpsl-native.so /usr/lib/
+# Find and copy libpsl-native.so from anywhere in the tree
+LIBPSL_PATH=$(find ../../ -name 'libpsl-native.so' | head -n1)
+if [ -z "$LIBPSL_PATH" ]; then
+  echo "[ERROR] libpsl-native.so not found after build!" >&2
+  exit 1
+fi
+echo "[DEBUG] Copying $LIBPSL_PATH to /usr/lib/"
+sudo cp "$LIBPSL_PATH" /usr/lib/
 
 # ---------------------------
 # BUILD POWERSHELL
@@ -96,8 +103,11 @@ cp "$PATCH_DIR/powershell-gen-${POWERSHELL_VERSION}.tar.gz" .
 log_and_run git clone https://github.com/PowerShell/PowerShell.git PowerShellSrc
 cd PowerShellSrc
 git checkout "tags/$POWERSHELL_VERSION" -b "${TARGETARCH}-${POWERSHELL_VERSION}"
-python3 ../dotnet-install.py --install-dir "$DOTNET_DIR"
-sudo ln -s "$DOTNET_DIR/dotnet" /usr/bin/dotnet
+
+# Use SDK version from global.json, install to /usr/share/dotnet, symlink to /usr/bin/dotnet
+SDK_VERSION=$(python3 -c "import json; print(json.load(open('global.json'))['sdk']['version'])")
+python3 ../dotnet-install.py --tag $SDK_VERSION --install-dir "$DOTNET_DIR"
+sudo ln -sf "$DOTNET_DIR/dotnet" /usr/bin/dotnet
 
 git apply ../pwsh.patch
 cp ../update-dotnet-sdk-and-tfm.sh .
