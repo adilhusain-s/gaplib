@@ -1,3 +1,19 @@
+## Ensure freshly built pwsh is available in PATH for build steps before .deb install
+PWSH_BIN=$(find "$(pwd)/bin/Release" -type f -path "*/linux-*/publish/pwsh" | head -n1)
+if [ -z "$PWSH_BIN" ] || [ ! -x "$PWSH_BIN" ]; then
+  echo "[ERROR] Built pwsh binary not found or not executable at expected location!" >&2
+  find "$(pwd)/bin/Release" -type f -name pwsh
+  exit 1
+fi
+echo "[DEBUG] Linking freshly built $PWSH_BIN to /usr/bin/pwsh for immediate use"
+sudo ln -sf "$PWSH_BIN" /usr/bin/pwsh
+ls -l /usr/bin/pwsh
+
+if ! command -v pwsh >/dev/null 2>&1; then
+  echo "[ERROR] pwsh not found in PATH after symlink. Check build output and symlink step." >&2
+  ls -l /usr/bin/pwsh || true
+  exit 1
+fi
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -131,10 +147,21 @@ dotnet publish . \
   --configuration Release \
   --framework "net$(dotnet --version | cut -d. -f1,2)" \
   --runtime "linux-$(uname -m)"
+# Ensure freshly built pwsh is available in PATH for packaging
+PWSH_BIN=$(find "$(pwd)/bin/Release" -type f -path "*/linux-*/publish/pwsh" | head -n1)
+if [ -z "$PWSH_BIN" ] || [ ! -x "$PWSH_BIN" ]; then
+  echo "[ERROR] Built pwsh binary not found or not executable at expected location!" >&2
+  find "$(pwd)/bin/Release" -type f -name pwsh
+  exit 1
+fi
 
-sudo ln -sf "$(pwd)/bin/Release/net*/linux-*/publish/pwsh" /usr/bin/pwsh
+echo "[DEBUG] Linking freshly built $PWSH_BIN to /usr/bin/pwsh for packaging"
+sudo ln -sf "$PWSH_BIN" /usr/bin/pwsh
+ls -l /usr/bin/pwsh
+
 
 cd ../..
+
 pwsh -Command "
   Set-Location .;
   Import-Module ./build.psm1 -ArgumentList \$true;
@@ -144,6 +171,10 @@ pwsh -Command "
   Start-PSBuild -UseNuGetOrg -Configuration Release;
   Start-PSPackage -Type deb -Version \"${POWERSHELL_VERSION#v}\"
 "
+
+# Remove the symlink to freshly built pwsh after packaging, before installing the .deb
+echo "[DEBUG] Removing /usr/bin/pwsh symlink after packaging"
+sudo rm -f /usr/bin/pwsh
 
 DEB_FILE="powershell_${POWERSHELL_VERSION#v}-1.deb_$(dpkg --print-architecture).deb"
 cp "$DEB_FILE" /tmp/powershell.deb
