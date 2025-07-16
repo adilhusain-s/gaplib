@@ -20,6 +20,3 @@ INSTALLER_SCRIPT_FOLDER="${installer_script_folder}"
 DOCKERHUB_PULL_IMAGES="NO"
 
 PATCH_FILE="${PATCH_FILE:-runner-sdk8-${ARCH}.patch}"
-# PowerShell patch file (version-aware, not using Docker naming convention)
-POWERSHELL_VERSION=${POWERSHELL_VERSION:-v7.5.1}
-POWERSHELL_PATCH_FILE="${POWERSHELL_PATCH_FILE:-powershell-${ARCH}-${POWERSHELL_VERSION}.patch}"

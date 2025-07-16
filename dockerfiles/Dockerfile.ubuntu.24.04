@@ -4,9 +4,9 @@ ARG     RUNNERREPO="https://github.com/actions/runner" RUNNERPATCH SDK_VERSION A
 
 ENV     DEBIAN_FRONTEND=noninteractive
 
-COPY    scripts/assets/99synaptics /etc/apt/apt.conf.d/
+COPY    ../scripts/assets/99synaptics /etc/apt/apt.conf.d/
 
-COPY    scripts/assets/01-nodoc /etc/dpkg/dpkg.cfg.d/
+COPY    ../scripts/assets/01-nodoc /etc/dpkg/dpkg.cfg.d/
 
 RUN     apt-get -qq update -y && \
         apt-get -qq -y install wget git sudo curl dotnet-sdk-8.0 && \
