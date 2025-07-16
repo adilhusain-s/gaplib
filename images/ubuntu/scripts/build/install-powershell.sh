@@ -107,7 +107,7 @@ chmod +x update-dotnet-sdk-and-tfm.sh
 
 # Use SDK version from global.json, install to /usr/share/dotnet, symlink to /usr/bin/dotnet
 SDK_VERSION=$(python3 -c "import json; print(json.load(open('global.json'))['sdk']['version'])")
-python3 ./dotnet-install.py --tag $SDK_VERSION --install-dir "$DOTNET_DIR"
+python3 ./dotnet-install.py --tag $SDK_VERSION
 sudo ln -sf "$DOTNET_DIR/dotnet" /usr/bin/dotnet
 
 git apply ../pwsh.patch
@@ -151,7 +151,7 @@ cp "$DEB_FILE" /tmp/powershell.deb
 # ---------------------------
 # INSTALL .deb PACKAGE
 # ---------------------------
-echo "📦 Installing PowerShell DEB"
+echo "📦 Installing PowerShell DEB"   
 sudo apt-get install -y /tmp/powershell.deb
 pwsh --version
 
