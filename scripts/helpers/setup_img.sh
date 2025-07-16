@@ -1,5 +1,4 @@
-echo "[DEBUG] Listing contents of ${helper_script_folder}/patch after copy:"
-sudo ls -l "${helper_script_folder}/patch"
+
 
 # Copy dotnet-install.py and update-dotnet-sdk-and-tfm.sh from helpers to patch dir for PowerShell build
 if [ -f "${CURRENT_DIR}/dotnet-install.py" ]; then
@@ -9,7 +8,8 @@ if [ -f "${CURRENT_DIR}/update-dotnet-sdk-and-tfm.sh" ]; then
   sudo cp "${CURRENT_DIR}/update-dotnet-sdk-and-tfm.sh" "${helper_script_folder}/patch/"
 fi
 
-# Debug: List all files in patch dir after copying
+
+# Debug: List all files in patch dir after all mkdir and copy steps
 echo "[DEBUG] Final contents of ${helper_script_folder}/patch:"
 sudo ls -l "${helper_script_folder}/patch"
 
