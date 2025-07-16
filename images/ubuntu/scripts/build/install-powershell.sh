@@ -5,31 +5,38 @@ set -euo pipefail
 # CONFIGURATION
 # ---------------------------
 UBUNTU_VERSION="${1:-24.04}"
-POWERSHELL_VERSION="v7.5.1"
-POWERSHELL_NATIVE_VERSION="v7.4.0"
-TARGETARCH="$(dpkg --print-architecture)"
-SRC_DIR="$(pwd)/PowerShell"
-PATCH_DIR="${SRC_DIR}/patch"
+POWERSHELL_VERSION="${POWERSHELL_VERSION:-v7.5.2}"
+POWERSHELL_NATIVE_VERSION="${POWERSHELL_NATIVE_VERSION:-v7.4.0}"
+TARGETARCH="${ARCH:-$(dpkg --print-architecture)}"
+POWERSHELL_CONTEXT="/var/tmp/imagegeneration/PowerShell/${TARGETARCH}/${POWERSHELL_VERSION}"
+PATCH_DIR="${POWERSHELL_CONTEXT}/patches"
+HELPER_DIR="${POWERSHELL_CONTEXT}/helpers"
 DOTNET_DIR="/usr/share/dotnet"
 INSTALLED_BY_SCRIPT=()
 
-# Debug: Print working and patch directories
-echo "[DEBUG] Current working directory: $(pwd)"
-echo "[DEBUG] SRC_DIR: $SRC_DIR"
-echo "[DEBUG] PATCH_DIR: $PATCH_DIR"
-if [ -d "$PATCH_DIR" ]; then
-  echo "[DEBUG] Listing contents of $PATCH_DIR:"
-  ls -l "$PATCH_DIR"
-else
-  echo "[ERROR] PATCH_DIR does not exist: $PATCH_DIR" >&2
-fi
+echo "[DEBUG] Using PowerShell build context: $POWERSHELL_CONTEXT"
+echo "[DEBUG] Patch dir: $PATCH_DIR"
+echo "[DEBUG] Helper dir: $HELPER_DIR"
+ls -l "$PATCH_DIR" || echo "[WARNING] Patch dir missing: $PATCH_DIR"
+ls -l "$HELPER_DIR" || echo "[WARNING] Helper dir missing: $HELPER_DIR"
 
-# Debug: Check for required patch files
+# Check for required patch files
 for required in "powershell-native-${POWERSHELL_NATIVE_VERSION}.patch" "powershell-${TARGETARCH}-${POWERSHELL_VERSION}.patch" "powershell-gen-${POWERSHELL_VERSION}.tar.gz"; do
   if [ ! -f "$PATCH_DIR/$required" ]; then
     echo "[ERROR] Required file missing: $PATCH_DIR/$required" >&2
+    exit 1
   else
     echo "[DEBUG] Found required file: $PATCH_DIR/$required"
+  fi
+done
+
+# Check for required helper scripts
+for helper in "dotnet-install.py" "update-dotnet-sdk-and-tfm.sh"; do
+  if [ ! -f "$HELPER_DIR/$helper" ]; then
+    echo "[ERROR] Required helper missing: $HELPER_DIR/$helper" >&2
+    exit 1
+  else
+    echo "[DEBUG] Found helper: $HELPER_DIR/$helper"
   fi
 done
 
@@ -80,11 +87,11 @@ sudo cp libpsl-native.so /usr/lib/
 # BUILD POWERSHELL
 # ---------------------------
 cd /tmp
-cp "${SRC_DIR}/dotnet-install.py" .
-cp "${SRC_DIR}/update-dotnet-sdk-and-tfm.sh" .
+cp "$HELPER_DIR/dotnet-install.py" .
+cp "$HELPER_DIR/update-dotnet-sdk-and-tfm.sh" .
 chmod +x update-dotnet-sdk-and-tfm.sh
-cp "${PATCH_DIR}/powershell-${TARGETARCH}-${POWERSHELL_VERSION}.patch" pwsh.patch
-cp "${PATCH_DIR}/powershell-gen-${POWERSHELL_VERSION}.tar.gz" .
+cp "$PATCH_DIR/powershell-${TARGETARCH}-${POWERSHELL_VERSION}.patch" pwsh.patch
+cp "$PATCH_DIR/powershell-gen-${POWERSHELL_VERSION}.tar.gz" .
 
 log_and_run git clone https://github.com/PowerShell/PowerShell.git PowerShellSrc
 cd PowerShellSrc
