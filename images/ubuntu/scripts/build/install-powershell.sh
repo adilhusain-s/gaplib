@@ -90,15 +90,19 @@ fi
 echo "[DEBUG] Copying $LIBPSL_PATH to /usr/lib/"
 sudo cp "$LIBPSL_PATH" /usr/lib/
 
+
 # ---------------------------
 # BUILD POWERSHELL
 # ---------------------------
-cd /tmp
+# The PowerShell repo must be at /PowerShell for packaging to work
+sudo rm -rf /PowerShell
+sudo mkdir -p /PowerShell
+sudo chown $(id -u):$(id -g) /PowerShell
+cd /PowerShell
 cp "$PATCH_DIR/powershell-${TARGETARCH}-${POWERSHELL_VERSION}.patch" pwsh.patch
 cp "$PATCH_DIR/powershell-gen-${POWERSHELL_VERSION}.tar.gz" .
 
-log_and_run git clone https://github.com/PowerShell/PowerShell.git PowerShellSrc
-cd PowerShellSrc
+log_and_run git clone https://github.com/PowerShell/PowerShell.git .
 git checkout "tags/$POWERSHELL_VERSION" -b "${TARGETARCH}-${POWERSHELL_VERSION}"
 # Copy helpers directly from build context
 cp "$HELPER_DIR/dotnet-install.py" .
@@ -110,14 +114,15 @@ SDK_VERSION=$(python3 -c "import json; print(json.load(open('global.json'))['sdk
 python3 ./dotnet-install.py --tag $SDK_VERSION
 sudo ln -sf "$DOTNET_DIR/dotnet" /usr/bin/dotnet
 
-git apply ../pwsh.patch
+git apply ./pwsh.patch
 ./update-dotnet-sdk-and-tfm.sh -g
-tar -xzf ../powershell-gen-${POWERSHELL_VERSION}.tar.gz -C .
+tar -xzf ./powershell-gen-${POWERSHELL_VERSION}.tar.gz -C .
 
-# ---------------------------
-# BUILD .deb PACKAGE
-# ---------------------------
-cd src/powershell-unix
+echo "[DEBUG] Linking freshly built $PWSH_BIN to /usr/bin/pwsh for packaging"
+sudo ln -sf "$PWSH_BIN" /usr/bin/pwsh
+ls -l /usr/bin/pwsh
+pwsh -Command "
+cd /PowerShell/src/powershell-unix
 dotnet restore --source https://api.nuget.org/v3/index.json
 dotnet publish . \
   -p:GenerateFullPaths=true \
@@ -138,14 +143,11 @@ if [ -z "$PWSH_BIN" ] || [ ! -x "$PWSH_BIN" ]; then
   find "$(pwd)/bin/Release" -type f -name pwsh
   exit 1
 fi
-
 echo "[DEBUG] Linking freshly built $PWSH_BIN to /usr/bin/pwsh for packaging"
 sudo ln -sf "$PWSH_BIN" /usr/bin/pwsh
 ls -l /usr/bin/pwsh
 
-
-cd ../..
-
+cd /PowerShell
 pwsh -Command "
   Set-Location .;
   Import-Module ./build.psm1 -ArgumentList \$true;
