@@ -46,24 +46,24 @@ done
 install_if_missing() {
   for pkg in "$@"; do
     if ! dpkg -s "$pkg" &>/dev/null; then
-      echo "📦 Installing: $pkg"
+  echo "Installing: $pkg"
       sudo apt-get install -y --no-install-recommends "$pkg"
       INSTALLED_BY_SCRIPT+=("$pkg")
     else
-      echo "✔️ Already installed: $pkg"
+  echo "Already installed: $pkg"
     fi
   done
 }
 
 log_and_run() {
-  echo "🧾 $*"
+  echo "$*"
   "$@"
 }
 
 # ---------------------------
 # PREPARE SYSTEM
 # ---------------------------
-echo "🚀 Building PowerShell $POWERSHELL_VERSION from source on Ubuntu $UBUNTU_VERSION ($TARGETARCH)"
+echo "Building PowerShell $POWERSHELL_VERSION from source on Ubuntu $UBUNTU_VERSION ($TARGETARCH)"
 sudo apt-get update -qq
 install_if_missing git curl ca-certificates cmake g++ gcc make patch unzip sudo \
   libicu-dev python3 python3-pip python3-typer dpkg-dev build-essential
@@ -96,20 +96,18 @@ sudo cp "$LIBPSL_PATH" /usr/lib/
 # ---------------------------
 # The PowerShell repo must be at /PowerShell for packaging to work
 sudo rm -rf /PowerShell
-sudo mkdir -p /PowerShell
-sudo chown $(id -u):$(id -g) /PowerShell
+log_and_run git clone https://github.com/PowerShell/PowerShell.git /PowerShell
 cd /PowerShell
+git checkout "tags/$POWERSHELL_VERSION" -b "${TARGETARCH}-${POWERSHELL_VERSION}"
+# Now copy patch and tarball after clone
 cp "$PATCH_DIR/powershell-${TARGETARCH}-${POWERSHELL_VERSION}.patch" pwsh.patch
 cp "$PATCH_DIR/powershell-gen-${POWERSHELL_VERSION}.tar.gz" .
-
-log_and_run git clone https://github.com/PowerShell/PowerShell.git .
-git checkout "tags/$POWERSHELL_VERSION" -b "${TARGETARCH}-${POWERSHELL_VERSION}"
 # Copy helpers directly from build context
 cp "$HELPER_DIR/dotnet-install.py" .
 cp "$HELPER_DIR/update-dotnet-sdk-and-tfm.sh" .
 chmod +x update-dotnet-sdk-and-tfm.sh
 
-# Use SDK version from global.json, install to /usr/share/dotnet, symlink to /usr/bin/dotnet
+# Use SDK verssion from global.json, install to /usr/share/dotnet, symlink to /usr/bin/dotnet
 SDK_VERSION=$(python3 -c "import json; print(json.load(open('global.json'))['sdk']['version'])")
 python3 ./dotnet-install.py --tag $SDK_VERSION
 sudo ln -sf "$DOTNET_DIR/dotnet" /usr/bin/dotnet
@@ -168,14 +166,14 @@ cp "$DEB_FILE" /tmp/powershell.deb
 # ---------------------------
 # INSTALL .deb PACKAGE
 # ---------------------------
-echo "📦 Installing PowerShell DEB"   
+echo "Installing PowerShell DEB"
 sudo apt-get install -y /tmp/powershell.deb
 pwsh --version
 
 # ---------------------------
 # CLEANUP
 # ---------------------------
-echo "🧹 Cleaning up temp files..."
+echo "Cleaning up temp files..."
 sudo rm -rf \
   /tmp/PowerShell* \
   /tmp/pwsh.* \
@@ -184,9 +182,9 @@ sudo rm -rf \
   ~/.dotnet \
   ~/.nuget
 
-echo "🧽 Removing apt packages installed by this script..."
+echo "Removing apt packages installed by this script..."
 for pkg in "${INSTALLED_BY_SCRIPT[@]}"; do
-  echo "❌ Removing: $pkg"
+  echo "Removing: $pkg"
   sudo apt-get purge -y "$pkg"
 done
 
@@ -194,4 +192,4 @@ sudo apt-get autoremove -y
 sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/*
 
-echo "✅ PowerShell installed cleanly and system restored."
+echo "PowerShell installed cleanly and system restored."
