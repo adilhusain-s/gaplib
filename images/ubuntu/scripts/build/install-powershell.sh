@@ -116,10 +116,6 @@ git apply ./pwsh.patch
 ./update-dotnet-sdk-and-tfm.sh -g
 tar -xzf ./powershell-gen-${POWERSHELL_VERSION}.tar.gz -C .
 
-echo "[DEBUG] Linking freshly built $PWSH_BIN to /usr/bin/pwsh for packaging"
-sudo ln -sf "$PWSH_BIN" /usr/bin/pwsh
-ls -l /usr/bin/pwsh
-pwsh -Command "
 cd /PowerShell/src/powershell-unix
 dotnet restore --source https://api.nuget.org/v3/index.json
 dotnet publish . \
