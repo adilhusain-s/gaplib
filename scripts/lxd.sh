@@ -32,10 +32,16 @@ ensure_lxd() {
         fi
         echo "Installing LXD using Snap..."
         run_script "${HOST_INSTALLER_SCRIPT_FOLDER}/install-lxd.sh" "HELPER_SCRIPTS" "INSTALLER_SCRIPT_FOLDER" "ARCH"
-        if command -v lxd &> /dev/null; then
+        # snap installs binaries under /snap/bin; ensure PATH includes it and rehash
+        export PATH=/snap/bin:${PATH}
+        hash -r 2>/dev/null || true
+
+        # Some systems need a moment for snap to place binaries in /snap/bin; check explicitly
+        if command -v lxd &> /dev/null || [ -x "/snap/bin/lxd" ]; then
             echo "LXD installed successfully."
         else
             echo "Failed to install LXD. Please check your system configuration."
+            echo "Attempted to find lxd in PATH and at /snap/bin/lxd." >&2
             exit 1
         fi
     else
