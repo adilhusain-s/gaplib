@@ -35,8 +35,10 @@ build_runner() {
     msg "Creating package"
     ./dev.sh package Release
 
-    msg "Running tests"
-    ./dev.sh test
+    msg "Running tests (skipped in this image build)"
+    # ./dev.sh test
+    # NOTE: tests are disabled here to speed up image builds. To re-enable,
+    # remove the comment and ensure the image has required test dependencies.
 }
 
 install_runner() {

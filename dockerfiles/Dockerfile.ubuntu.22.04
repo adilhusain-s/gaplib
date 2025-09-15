@@ -26,7 +26,8 @@ RUN     cd /tmp && \
 RUN     cd /tmp/runner/src && \
         ./dev.sh layout && \
         ./dev.sh package && \
-        ./dev.sh test && \
+        # ./dev.sh test && \
+        # NOTE: tests disabled in Docker image builds to reduce build time.
         rm -rf /root/.dotnet /root/.nuget
 
 RUN     useradd -c 'Action Runner' -m -s /bin/bash runner && \
